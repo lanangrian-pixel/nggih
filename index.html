@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#080808">
+    <meta name="description" content="Lihat progres keseluruhan dan roadmap proyek Usaha XYZ.">
+    <title>Project Roadmap: Usaha XYZ</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="milestones.js" defer></script>
+    <script src="roadmap.js" defer></script>
+  </head>
+  <body>
+    <main class="page roadmap-page">
+      <header class="page-header">
+        <p class="eyebrow">PROJECT ROADMAP</p>
+        <h1>Usaha XYZ</h1>
+        <p class="page-subtitle">Ringkasan progres proyek dan roadmap milestone.</p>
+      </header>
+
+      <section class="summary-card" aria-labelledby="progress-heading">
+        <div class="summary-copy">
+          <p class="eyebrow">OVERALL PROGRESS</p>
+          <h2 id="progress-heading">Progress proyek</h2>
+          <p id="progress-count" class="summary-count" aria-live="polite">Memuat progres...</p>
+        </div>
+        <div class="progress-stat">
+          <strong id="progress-percent">0%</strong>
+          <span>selesai</span>
+        </div>
+        <div
+          id="progress-meter"
+          class="progress-meter"
+          role="progressbar"
+          aria-label="Progres proyek"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span id="progress-meter-fill"></span>
+        </div>
+        <div class="status-summary" aria-label="Ringkasan status milestone">
+          <span><i class="legend-dot completed"></i><strong id="completed-count">0</strong> Completed</span>
+          <span><i class="legend-dot in-progress"></i><strong id="in-progress-count">0</strong> In Progress</span>
+          <span><i class="legend-dot not-started"></i><strong id="not-started-count">0</strong> Not Started</span>
+        </div>
+      </section>
+
+      <section class="panel timeline-panel" aria-labelledby="timeline-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PROJECT ROADMAP</p>
+            <h2 id="timeline-heading">Timeline Proyek</h2>
+          </div>
+          <p class="section-hint">Progres milestone per minggu.</p>
+        </div>
+        <div class="timeline-scroll" tabindex="0" aria-label="Timeline milestone, gulir horizontal jika diperlukan">
+          <div id="timeline" class="timeline" aria-label="Timeline milestone per minggu">
+            <div class="timeline-rail" aria-hidden="true">
+              <span id="timeline-progress"></span>
+            </div>
+            <div id="milestone-points" class="milestone-points"></div>
+            <div id="week-labels" class="week-labels"></div>
+          </div>
+        </div>
+        <p id="timeline-empty" class="empty-state" hidden>Belum ada milestone untuk ditampilkan.</p>
+        <div id="data-error" class="error-state" role="alert" hidden>
+          Data progres tidak dapat dibaca. Coba muat ulang halaman.
+        </div>
+      </section>
+
+      <section class="panel milestones-panel" aria-labelledby="milestones-heading">
+        <div class="section-heading table-heading">
+          <div>
+            <p class="eyebrow">MILESTONE TRACKER</p>
+            <h2 id="milestones-heading">Daftar Milestone</h2>
+          </div>
+          <span id="milestone-total" class="total-badge">0 milestones</span>
+        </div>
+        <div id="table-empty" class="empty-state" hidden>Belum ada milestone untuk ditampilkan.</div>
+        <div id="table-container" class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Week</th>
+                <th scope="col">Milestone</th>
+                <th scope="col">Description</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody id="milestone-rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
