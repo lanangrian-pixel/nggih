@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#080808">
+    <meta name="description" content="Pantau progres milestone proyek Usaha XYZ.">
+    <title>Activity Log: Usaha XYZ</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="milestones.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <p class="eyebrow">PROJECT OVERVIEW</p>
+        <h1>Activity Log: Usaha XYZ</h1>
+        <p class="page-subtitle">Pantau milestone dan progres proyek dari minggu ke minggu.</p>
+      </header>
+
+      <section class="summary-card" aria-labelledby="progress-heading">
+        <div class="summary-copy">
+          <p class="eyebrow">OVERALL PROGRESS</p>
+          <h2 id="progress-heading">Progress proyek</h2>
+          <p id="progress-count" class="summary-count" aria-live="polite">Memuat progres...</p>
+        </div>
+        <div class="progress-stat">
+          <strong id="progress-percent">0%</strong>
+          <span>selesai</span>
+        </div>
+        <div
+          id="progress-meter"
+          class="progress-meter"
+          role="progressbar"
+          aria-label="Progres proyek"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span id="progress-meter-fill"></span>
+        </div>
+        <div class="status-summary" aria-label="Ringkasan status milestone">
+          <span><i class="legend-dot completed"></i><strong id="completed-count">0</strong> Completed</span>
+          <span><i class="legend-dot in-progress"></i><strong id="in-progress-count">0</strong> In Progress</span>
+          <span><i class="legend-dot not-started"></i><strong id="not-started-count">0</strong> Not Started</span>
+        </div>
+      </section>
+
+      <section class="panel timeline-panel" aria-labelledby="timeline-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PROJECT ROADMAP</p>
+            <h2 id="timeline-heading">Timeline Proyek</h2>
+          </div>
+          <p class="section-hint">Pilih titik milestone atau minggu untuk melihat detail.</p>
+        </div>
+        <div class="timeline-scroll" tabindex="0" aria-label="Timeline milestone, gulir horizontal jika diperlukan">
+          <div id="timeline" class="timeline" aria-label="Timeline milestone per minggu">
+            <div class="timeline-rail" aria-hidden="true">
+              <span id="timeline-progress"></span>
+            </div>
+            <div id="milestone-points" class="milestone-points"></div>
+            <div id="week-labels" class="week-labels"></div>
+          </div>
+        </div>
+        <p id="timeline-empty" class="empty-state" hidden>Belum ada milestone untuk ditampilkan.</p>
+      </section>
+
+      <section class="panel milestones-panel" aria-labelledby="milestones-heading">
+        <div class="section-heading table-heading">
+          <div>
+            <p class="eyebrow">MILESTONE TRACKER</p>
+            <h2 id="milestones-heading">Daftar Milestone</h2>
+          </div>
+          <div class="table-actions">
+            <span id="milestone-total" class="total-badge">0 milestones</span>
+            <button id="editor-toggle" class="editor-toggle" type="button" aria-pressed="false">
+              Mode Editor
+            </button>
+          </div>
+        </div>
+        <p id="editor-message" class="editor-message" aria-live="polite">
+          Aktifkan Mode Editor untuk mengubah detail milestone.
+        </p>
+        <div id="data-error" class="error-state" role="alert" hidden>
+          Data milestone tidak valid. Periksa data proyek sebelum mencoba kembali.
+        </div>
+        <div id="table-empty" class="empty-state" hidden>Belum ada milestone. Tambahkan milestone untuk mulai melacak progres.</div>
+        <div id="table-container" class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Week</th>
+                <th scope="col">Milestone</th>
+                <th scope="col">Description</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody id="milestone-rows"></tbody>
+          </table>
+        </div>
+      </section>
+      <footer class="page-footer">Activity Log <span aria-hidden="true">·</span> Usaha XYZ</footer>
+    </main>
+  </body>
+</html>
