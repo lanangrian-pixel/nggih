@@ -316,7 +316,13 @@ elements.editorLoginForm.addEventListener("submit", async (event) => {
     await window.milestoneStore.sendSignInLink(elements.editorEmail.value.trim());
     elements.editorAuthMessage.textContent = "Tautan masuk telah dikirim. Periksa kotak masuk email Anda.";
   } catch (error) {
-    elements.editorAuthMessage.textContent = "Tautan masuk gagal dikirim. Periksa email dan konfigurasi autentikasi.";
+    const retryMatch =
+      typeof error?.message === "string" && error.message.match(/after (\d+) seconds/i);
+    elements.editorAuthMessage.textContent = retryMatch
+      ? `Tautan baru saja diminta. Coba lagi dalam ${retryMatch[1]} detik.`
+      : error?.status === 429
+        ? "Permintaan terlalu sering. Tunggu sebentar sebelum meminta tautan masuk lagi."
+        : "Tautan masuk gagal dikirim. Periksa email dan konfigurasi autentikasi.";
     elements.editorAuthMessage.classList.add("is-error");
     console.error("Unable to send editor sign-in link.", error);
   } finally {
