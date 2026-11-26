@@ -7,7 +7,9 @@
     <meta name="description" content="Pantau progres milestone proyek Usaha XYZ.">
     <title>Activity Log: Usaha XYZ</title>
     <link rel="stylesheet" href="style.css">
-    <script src="milestones.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="supabase-config.js" defer></script>
+    <script src="milestone-store.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -100,7 +102,26 @@
           </table>
         </div>
       </section>
-      <footer class="page-footer">Activity Log <span aria-hidden="true">·</span> Usaha XYZ</footer>
+      <section class="panel editor-auth-panel" aria-labelledby="editor-auth-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">EDITOR ACCESS</p>
+            <h2 id="editor-auth-heading">Akses penyunting</h2>
+          </div>
+        </div>
+        <form id="editor-login-form" class="editor-auth-form">
+          <label for="editor-email">Email yang diizinkan</label>
+          <div class="editor-auth-actions">
+            <input id="editor-email" class="milestone-text-input" type="email" autocomplete="email" required>
+            <button id="editor-login-button" class="editor-toggle" type="submit">Kirim tautan masuk</button>
+          </div>
+        </form>
+        <button id="editor-logout" class="editor-toggle" type="button" hidden>Keluar</button>
+        <p id="editor-auth-message" class="editor-message" aria-live="polite">
+          Masuk dengan email yang telah diizinkan untuk menyunting milestone.
+        </p>
+      </section>
+      <footer class="page-footer"><a href="index.html">Lihat versi klien</a> <span aria-hidden="true">·</span> Activity Log: Usaha XYZ</footer>
     </main>
   </body>
 </html>
