@@ -1,4 +1,4 @@
-const milestones = window.projectMilestones;
+let milestones = [];
 
 const statusLabels = {
   completed: "Completed",
@@ -6,14 +6,19 @@ const statusLabels = {
   not_started: "Not Started",
 };
 
-const storageKey = "activity-log-usaha-xyz-statuses";
 let editorMode = false;
+let canEdit = false;
 
 const elements = {
   completedCount: document.querySelector("#completed-count"),
   dataError: document.querySelector("#data-error"),
+  editorEmail: document.querySelector("#editor-email"),
+  editorLoginButton: document.querySelector("#editor-login-button"),
+  editorLoginForm: document.querySelector("#editor-login-form"),
+  editorLogout: document.querySelector("#editor-logout"),
   editorMessage: document.querySelector("#editor-message"),
   editorToggle: document.querySelector("#editor-toggle"),
+  editorAuthMessage: document.querySelector("#editor-auth-message"),
   inProgressCount: document.querySelector("#in-progress-count"),
   milestonePoints: document.querySelector("#milestone-points"),
   milestoneRows: document.querySelector("#milestone-rows"),
@@ -31,74 +36,77 @@ const elements = {
   weekLabels: document.querySelector("#week-labels"),
 };
 
-function loadSavedStatuses() {
+async function loadMilestones() {
   try {
-    const savedStatuses = localStorage.getItem(storageKey);
-    if (savedStatuses === null) return;
-
-    const parsedStatuses = JSON.parse(savedStatuses);
-    if (!parsedStatuses || typeof parsedStatuses !== "object" || Array.isArray(parsedStatuses)) {
-      throw new Error("Saved milestone statuses must be an object.");
-    }
-
-    const validStatuses = new Set(Object.keys(statusLabels));
-    for (const [id, savedMilestone] of Object.entries(parsedStatuses)) {
-      const status = typeof savedMilestone === "string" ? savedMilestone : savedMilestone?.status;
-      if (!validStatuses.has(status)) {
-        throw new Error(`Invalid saved status for milestone ${id}.`);
-      }
-      if (
-        typeof savedMilestone === "object" &&
-        savedMilestone !== null &&
-        ((savedMilestone.name !== undefined && typeof savedMilestone.name !== "string") ||
-          (savedMilestone.description !== undefined && typeof savedMilestone.description !== "string"))
-      ) {
-        throw new Error(`Invalid saved text for milestone ${id}.`);
-      }
-    }
-
-    milestones.forEach((milestone) => {
-      if (Object.hasOwn(parsedStatuses, milestone.id)) {
-        const savedMilestone = parsedStatuses[milestone.id];
-        milestone.status = typeof savedMilestone === "string" ? savedMilestone : savedMilestone.status;
-        if (typeof savedMilestone === "object" && savedMilestone !== null) {
-          if (typeof savedMilestone.name === "string") milestone.name = savedMilestone.name;
-          if (typeof savedMilestone.description === "string") {
-            milestone.description = savedMilestone.description;
-          }
-        }
-      }
-    });
-  } catch {
-    elements.editorMessage.textContent =
-      "Status tersimpan tidak dapat dibaca. Perubahan baru mungkin tidak tersimpan.";
-    elements.editorMessage.classList.add("is-error");
+    const records = await window.milestoneStore.fetchMilestones();
+    milestones = records.map((milestone) => ({ ...milestone, order: milestone.sort_order }));
+    elements.dataError.hidden = true;
+    render();
+  } catch (error) {
+    elements.dataError.hidden = false;
+    elements.dataError.textContent = "Data milestone tidak dapat dimuat dari Supabase. Coba muat ulang halaman.";
+    console.error("Unable to load milestones from Supabase.", error);
   }
 }
 
-function saveStatuses() {
-  const statuses = Object.fromEntries(
-    milestones.map(({ id, status, name, description }) => [id, { status, name, description }]),
-  );
+async function saveMilestone(id, changes) {
   try {
-    localStorage.setItem(storageKey, JSON.stringify(statuses));
-    elements.editorMessage.textContent = "Perubahan tersimpan di browser ini.";
+    await window.milestoneStore.updateMilestone(id, changes);
+    await loadMilestones();
+    elements.editorMessage.textContent = "Perubahan tersimpan dan tersedia untuk semua pengunjung.";
     elements.editorMessage.classList.remove("is-error");
-  } catch {
-    elements.editorMessage.textContent =
-      "Perubahan diterapkan sementara, tetapi browser tidak dapat menyimpannya.";
+  } catch (error) {
+    elements.editorMessage.textContent = "Perubahan gagal disimpan. Periksa izin editor dan koneksi, lalu coba lagi.";
     elements.editorMessage.classList.add("is-error");
+    console.error("Unable to save milestone to Supabase.", error);
   }
 }
 
 function setEditorMode(isEnabled) {
-  editorMode = isEnabled;
+  editorMode = canEdit && isEnabled;
   elements.editorToggle.setAttribute("aria-pressed", String(editorMode));
   elements.editorToggle.textContent = editorMode ? "Selesai Mengedit" : "Mode Editor";
   elements.editorMessage.textContent = editorMode
     ? "Edit nama, deskripsi, atau status milestone langsung pada tabel."
-    : "Aktifkan Mode Editor untuk mengubah status milestone.";
+    : canEdit
+      ? "Aktifkan Mode Editor untuk mengubah status milestone."
+      : "Masuk dengan akun yang diizinkan untuk mengedit.";
   elements.editorMessage.classList.remove("is-error");
+  render();
+}
+
+async function updateEditorAccess(session) {
+  const isSignedIn = Boolean(session);
+  elements.editorLoginForm.hidden = isSignedIn;
+  elements.editorLogout.hidden = !isSignedIn;
+  canEdit = false;
+  editorMode = false;
+  elements.editorToggle.disabled = true;
+  elements.editorMessage.classList.remove("is-error");
+
+  if (!isSignedIn) {
+    elements.editorAuthMessage.textContent = "Masuk dengan email yang telah diizinkan untuk menyunting milestone.";
+    elements.editorMessage.textContent = "Masuk dengan akun yang diizinkan untuk mengedit.";
+    render();
+    return;
+  }
+
+  elements.editorAuthMessage.textContent = `Masuk sebagai ${session.user.email}.`;
+  try {
+    canEdit = await window.milestoneStore.canEdit();
+    elements.editorToggle.disabled = !canEdit;
+    elements.editorAuthMessage.textContent = canEdit
+      ? `Akses editor aktif untuk ${session.user.email}.`
+      : `Akun ${session.user.email} belum diberi izin editor.`;
+    elements.editorMessage.textContent = canEdit
+      ? "Aktifkan Mode Editor untuk mengubah milestone."
+      : "Akun ini hanya dapat melihat data.";
+    if (!canEdit) elements.editorMessage.classList.add("is-error");
+  } catch (error) {
+    elements.editorAuthMessage.textContent = "Izin editor tidak dapat diverifikasi. Coba muat ulang halaman.";
+    elements.editorAuthMessage.classList.add("is-error");
+    console.error("Unable to verify editor access.", error);
+  }
   render();
 }
 
@@ -229,8 +237,7 @@ function render() {
           return;
         }
         milestone.name = name;
-        saveStatuses();
-        render();
+        saveMilestone(milestone.id, { name });
       });
       nameCell.append(nameInput);
 
@@ -241,9 +248,7 @@ function render() {
       descriptionInput.rows = 2;
       descriptionInput.setAttribute("aria-label", `Ubah deskripsi ${milestone.name}`);
       descriptionInput.addEventListener("change", () => {
-        milestone.description = descriptionInput.value.trim();
-        saveStatuses();
-        render();
+        saveMilestone(milestone.id, { description: descriptionInput.value.trim() });
       });
       descriptionCell.append(descriptionInput);
     } else {
@@ -263,9 +268,7 @@ function render() {
         statusSelect.append(option);
       });
       statusSelect.addEventListener("change", () => {
-        milestone.status = statusSelect.value;
-        saveStatuses();
-        render();
+        saveMilestone(milestone.id, { status: statusSelect.value });
       });
       statusCell.append(statusSelect);
     } else {
@@ -305,12 +308,47 @@ function render() {
 }
 
 elements.editorToggle.addEventListener("click", () => setEditorMode(!editorMode));
-loadSavedStatuses();
-render();
-
-window.addEventListener("storage", (event) => {
-  if (event.key === storageKey || event.key === null) {
-    loadSavedStatuses();
-    render();
+elements.editorLoginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  elements.editorAuthMessage.classList.remove("is-error");
+  elements.editorLoginButton.disabled = true;
+  try {
+    await window.milestoneStore.sendSignInLink(elements.editorEmail.value.trim());
+    elements.editorAuthMessage.textContent = "Tautan masuk telah dikirim. Periksa kotak masuk email Anda.";
+  } catch (error) {
+    elements.editorAuthMessage.textContent = "Tautan masuk gagal dikirim. Periksa email dan konfigurasi autentikasi.";
+    elements.editorAuthMessage.classList.add("is-error");
+    console.error("Unable to send editor sign-in link.", error);
+  } finally {
+    elements.editorLoginButton.disabled = false;
   }
 });
+elements.editorLogout.addEventListener("click", async () => {
+  try {
+    await window.milestoneStore.signOut();
+    await updateEditorAccess(null);
+  } catch (error) {
+    elements.editorAuthMessage.textContent = "Gagal keluar. Coba muat ulang halaman.";
+    elements.editorAuthMessage.classList.add("is-error");
+    console.error("Unable to sign out editor.", error);
+  }
+});
+
+try {
+  window.milestoneStore.onAuthStateChange((session) => updateEditorAccess(session));
+} catch (error) {
+  elements.editorAuthMessage.textContent = "Konfigurasi Supabase belum tersedia.";
+  elements.editorAuthMessage.classList.add("is-error");
+  console.error("Unable to listen for editor auth state.", error);
+}
+window.milestoneStore.getSession().then(updateEditorAccess).catch((error) => {
+  elements.editorAuthMessage.textContent = "Status masuk tidak dapat diperiksa. Coba muat ulang halaman.";
+  elements.editorAuthMessage.classList.add("is-error");
+  console.error("Unable to load editor session.", error);
+});
+window.milestoneStore.subscribe(loadMilestones, (error) => {
+  elements.dataError.hidden = false;
+  elements.dataError.textContent = "Koneksi pembaruan langsung terputus. Muat ulang halaman untuk data terbaru.";
+  console.error("Supabase realtime subscription failed.", error);
+});
+loadMilestones();
