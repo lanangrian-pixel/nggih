@@ -215,12 +215,19 @@ h1 {
   background: var(--accent);
   color: #fff;
 }
+.editor-toggle:disabled { cursor: not-allowed; opacity: .55; }
 .editor-toggle:focus-visible, .status-select:focus-visible, .milestone-text-input:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 3px;
 }
 .editor-message { margin: -7px 0 15px; color: var(--muted); font-size: .77rem; }
 .editor-message.is-error { color: #ffb1b1; }
+.editor-auth-panel { margin-top: 24px; }
+.editor-auth-panel .section-heading { margin-bottom: 14px; }
+.editor-auth-form label { display: block; margin-bottom: 8px; color: var(--muted); font-size: .8rem; }
+.editor-auth-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.editor-auth-actions .milestone-text-input { max-width: 360px; }
+.editor-auth-panel [hidden] { display: none; }
 .table-scroll { overflow-x: auto; scrollbar-color: #514255 transparent; scrollbar-width: thin; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 thead { background: linear-gradient(100deg, #a915bc, #c123d2); }
@@ -273,6 +280,7 @@ td:last-child { min-width: 140px; white-space: nowrap; }
 .error-state { margin-bottom: 16px; border: 1px solid rgb(255 115 115 / 35%); background: rgb(255 115 115 / 8%); color: #ffb1b1; }
 .page-footer { padding: 2px 0 0; color: #77717c; font-size: .75rem; text-align: center; }
 .page-footer span { padding: 0 5px; color: var(--accent-bright); }
+.page-footer a { color: #c4bdc8; }
 [hidden] { display: none !important; }
 
 @media (max-width: 700px) {
@@ -283,6 +291,8 @@ td:last-child { min-width: 140px; white-space: nowrap; }
   .section-heading { align-items: flex-start; flex-direction: column; gap: 8px; margin-bottom: 18px; }
   .table-heading { align-items: center; flex-direction: row; }
   .table-actions { align-items: flex-end; flex-direction: column-reverse; gap: 7px; }
+  .editor-auth-actions { align-items: stretch; flex-direction: column; }
+  .editor-auth-actions .milestone-text-input { max-width: none; }
   table { min-width: 720px; }
   th, td { padding-right: 13px; padding-left: 13px; }
 }
