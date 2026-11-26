@@ -3,8 +3,7 @@ const statusLabels = {
   in_progress: "In Progress",
   not_started: "Not Started",
 };
-const storageKey = "activity-log-usaha-xyz-statuses";
-const milestones = window.projectMilestones;
+let milestones = [];
 
 const elements = {
   completedCount: document.querySelector("#completed-count"),
@@ -26,52 +25,37 @@ const elements = {
   weekLabels: document.querySelector("#week-labels"),
 };
 
+function isValidMilestoneList(items) {
+  const ids = new Set();
+  const validStatuses = new Set(Object.keys(statusLabels));
+  return items.every((milestone) => {
+    const valid =
+      milestone &&
+      typeof milestone.id === "string" &&
+      milestone.id.length > 0 &&
+      !ids.has(milestone.id) &&
+      Number.isInteger(milestone.week) &&
+      milestone.week > 0 &&
+      Number.isInteger(milestone.order) &&
+      milestone.order > 0 &&
+      typeof milestone.name === "string" &&
+      milestone.name.trim().length > 0 &&
+      typeof milestone.description === "string" &&
+      validStatuses.has(milestone.status);
+    if (valid) ids.add(milestone.id);
+    return valid;
+  });
+}
+
 function getWeekStatus(weekMilestones) {
   if (weekMilestones.every((milestone) => milestone.status === "completed")) return "completed";
   if (weekMilestones.some((milestone) => milestone.status !== "not_started")) return "in_progress";
   return "not_started";
 }
 
-function loadSavedStatuses() {
-  const savedStatuses = localStorage.getItem(storageKey);
-  if (savedStatuses === null) return;
-
-  const parsedStatuses = JSON.parse(savedStatuses);
-  if (!parsedStatuses || typeof parsedStatuses !== "object" || Array.isArray(parsedStatuses)) {
-    throw new Error("Saved milestone statuses have an invalid format.");
-  }
-
-  const validStatuses = new Set(Object.keys(statusLabels));
-  for (const [id, savedMilestone] of Object.entries(parsedStatuses)) {
-    const status = typeof savedMilestone === "string" ? savedMilestone : savedMilestone?.status;
-    if (!validStatuses.has(status)) throw new Error(`Invalid saved status for milestone ${id}.`);
-    if (
-      typeof savedMilestone === "object" &&
-      savedMilestone !== null &&
-      ((savedMilestone.name !== undefined && typeof savedMilestone.name !== "string") ||
-        (savedMilestone.description !== undefined && typeof savedMilestone.description !== "string"))
-    ) {
-      throw new Error(`Invalid saved text for milestone ${id}.`);
-    }
-  }
-
-  milestones.forEach((milestone) => {
-    if (Object.hasOwn(parsedStatuses, milestone.id)) {
-      const savedMilestone = parsedStatuses[milestone.id];
-      milestone.status = typeof savedMilestone === "string" ? savedMilestone : savedMilestone.status;
-      if (typeof savedMilestone === "object" && savedMilestone !== null) {
-        if (typeof savedMilestone.name === "string") milestone.name = savedMilestone.name;
-        if (typeof savedMilestone.description === "string") {
-          milestone.description = savedMilestone.description;
-        }
-      }
-    }
-  });
-}
-
 function render() {
   try {
-    loadSavedStatuses();
+    if (!isValidMilestoneList(milestones)) throw new Error("Supabase returned invalid milestone data.");
     const orderedMilestones = [...milestones].sort((a, b) => a.week - b.week || a.order - b.order);
     const total = orderedMilestones.length;
     const completed = orderedMilestones.filter((item) => item.status === "completed").length;
@@ -146,14 +130,30 @@ function render() {
     elements.dataError.hidden = true;
   } catch (error) {
     elements.timeline.hidden = true;
+    elements.tableContainer.hidden = true;
     elements.dataError.hidden = false;
     elements.progressCount.textContent = "Progres belum dapat ditampilkan.";
     console.error("Unable to load project roadmap data.", error);
   }
 }
 
-window.addEventListener("storage", (event) => {
-  if (event.key === storageKey || event.key === null) render();
-});
+async function loadMilestones() {
+  try {
+    const records = await window.milestoneStore.fetchMilestones();
+    milestones = records.map((milestone) => ({ ...milestone, order: milestone.sort_order }));
+    render();
+  } catch (error) {
+    elements.timeline.hidden = true;
+    elements.tableContainer.hidden = true;
+    elements.dataError.hidden = false;
+    elements.progressCount.textContent = "Progres belum dapat ditampilkan.";
+    console.error("Unable to load project roadmap data from Supabase.", error);
+  }
+}
 
-render();
+window.milestoneStore.subscribe(loadMilestones, (error) => {
+  elements.dataError.hidden = false;
+  elements.dataError.textContent = "Koneksi pembaruan langsung terputus. Muat ulang halaman untuk data terbaru.";
+  console.error("Supabase realtime subscription failed.", error);
+});
+loadMilestones();
